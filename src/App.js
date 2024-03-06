@@ -7,7 +7,7 @@ import { XRButton } from 'three/addons/webxr/XRButton.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
 import { useLoader } from '@react-three/fiber'
 
-import GLB_Model from './blender_model_export.glb'
+import GLB_Model from './assets/models/kicc.glb'
 
 function App() {
 
