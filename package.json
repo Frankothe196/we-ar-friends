@@ -1,6 +1,6 @@
 {
-  "name": "augmented-reality-webxr-with-react",
-  "homepage": "https://frankothe196.github.io/augmented-reality-webxr-with-react",
+  "name": "we-ar-friends",
+  "homepage": "https://frankothe196.github.io/we-ar-friends",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
@@ -17,11 +17,12 @@
   },
   "scripts": {
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d build",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "lint": "eslint \"src/**/*.{js,jsx}\"",
+    "lint:fix": "eslint \"src/**/*.{js,jsx}\" --fix"
   },
   "eslintConfig": {
     "extends": [
@@ -42,6 +43,9 @@
     ]
   },
   "devDependencies": {
-    "gh-pages": "^6.0.0"
+    "eslint": "^8.57.0",
+    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-jsx-a11y": "^6.8.0",
+    "eslint-plugin-react": "^7.34.0"
   }
 }
