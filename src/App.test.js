@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react';
-import App from './App';
+import UserInterface from './components/userInterface';
 
-test('renders learn react link', () => {
-  render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
+test('Check for welcome screen', () => {
+  render(<UserInterface />);
+  const textElement = screen.getByText(/Welcome to We AR Friends!/i);
+  expect(textElement).toBeInTheDocument();
 });

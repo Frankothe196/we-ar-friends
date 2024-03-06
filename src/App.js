@@ -111,7 +111,9 @@ function App() {
 
 
   return (
-    <div className="App" id='App' ref={ref}></div>
+    <>
+      <div className="App" id='App' ref={ref}></div>
+    </>
   );
 }
 
