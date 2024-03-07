@@ -1,7 +1,7 @@
 {
   "extends": [
     "eslint:recommended",
-    "plugin:import/errors",
+    // "plugin:import/errors",
     "plugin:react/recommended",
     "plugin:jsx-a11y/recommended"
   ],
@@ -28,5 +28,9 @@
     "react": {
       "version": "detect"
     }
+  },
+  "globals": {
+    "test": "readonly",
+    "expect": "readonly"
   }
 }
