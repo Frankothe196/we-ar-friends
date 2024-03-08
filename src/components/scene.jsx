@@ -8,7 +8,12 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { useLoader } from "@react-three/fiber";
 
 import GLB_Model from "../assets/models/kicc.glb";
+// import Bot_GLB from "../assets/models/Xbot.glb";
+import Bot_GLB from "../assets/models/Soldier.glb";
 import UserInterface from "../components/userInterface";
+
+import { CharacterControls } from "./botControls";
+import { KeyDisplay } from "./utils";
 
 function Scene() {
   const cube = useRef(null);
@@ -37,7 +42,7 @@ function Scene() {
     color: 0x909090,
     dithering: true,
   });
-  const model_mesh = new THREE.Mesh(geometry, material);
+  let model_mesh = new THREE.Mesh(geometry, material);
   model_mesh.castShadow = true; //default is false
   model_mesh.receiveShadow = true; //default
   model_mesh.scale.set(0.1, 0.1, 0.1); // its alittle too large lets scale it down
@@ -82,20 +87,54 @@ function Scene() {
   );
   camera.position.set(8, 5, 8);
 
-  // Init Controls
-  const controls = new OrbitControls(camera, renderer.domElement);
-  controls.target.set(0, 0, 0);
-  controls.update();
-  controls.enablePan = false;
-  controls.enableDamping = true;
+  // // Init Controls
+  // const controls = new OrbitControls(camera, renderer.domElement);
+  // controls.target.set(0, 0, 0);
+  // controls.update();
+  // controls.enablePan = false;
+  // controls.enableDamping = true;
+  // CONTROLS
+  const orbitControls = new OrbitControls(camera, renderer.domElement);
+  orbitControls.enableDamping = true
+  orbitControls.minDistance = 5
+  orbitControls.maxDistance = 15
+  orbitControls.enablePan = false
+  orbitControls.maxPolarAngle = Math.PI / 2 - 0.05
+  orbitControls.update();
+
+  // CONTROL KEYS
+  var characterControls
+  const keysPressed = {  }
+  const keyDisplayQueue = new KeyDisplay();
+  document.addEventListener('keydown', (event) => {
+      keyDisplayQueue.down(event.key)
+      if (event.shiftKey && characterControls) {
+          characterControls.switchRunToggle()
+      } else {
+          (keysPressed)[event.key.toLowerCase()] = true
+      }
+  }, false);
+  document.addEventListener('keyup', (event) => {
+      keyDisplayQueue.up(event.key);
+      (keysPressed)[event.key.toLowerCase()] = false
+  }, false);
+
+  const clock = new THREE.Clock();
 
   // Animate
   function animate() {
     // We need to adjust the animate function from what three.js usually recommends does'nt work with web xr
     // requestAnimationFrame(animate) // This should'nt work
-    renderer.setAnimationLoop(function () {
-      renderer.render(scene, camera);
-    });
+    // renderer.setAnimationLoop(function () {
+    //   renderer.render(scene, camera);
+    // });
+    let mixerUpdateDelta = clock.getDelta();
+    if (characterControls) {
+        characterControls.update(mixerUpdateDelta, keysPressed);
+    }
+    orbitControls.update()
+    renderer.render(scene, camera);
+    requestAnimationFrame(animate);
   }
 
   function onWindowResize() {
@@ -111,30 +150,49 @@ function Scene() {
   cube.current = spriteMesh;
   scene.add(spriteMesh);
 
-  // Handle arrow key presses to move the cube
-  const handleKeyPress = (event) => {
-    console.log("key!")
-    const speed = 0.1;
-    switch (event.key) {
-    case "ArrowUp":
-      cube.current.position.y += speed;
-      break;
-    case "ArrowDown":
-      cube.current.position.y -= speed;
-      break;
-    case "ArrowLeft":
-      cube.current.position.x -= speed;
-      break;
-    case "ArrowRight":
-      cube.current.position.x += speed;
-      break;
-    default:
-      break;
-    }
-  };
+
+  new GLTFLoader().load(Bot_GLB, function(gltf){
+    const model = gltf.scene
+    model.traverse(function(object){
+      if(object.isMesh) object.castShadow=true
+    });
+    scene.add(model)
+
+    const gltfAnimations= gltf.animations;
+    const mixer = new THREE.AnimationMixer(model);
+    const animationsMap= new Map()
+    gltfAnimations.filter(a => a.name != 'TPose').forEach((a) => {
+        animationsMap.set(a.name, mixer.clipAction(a))
+    })
+
+    characterControls = new CharacterControls(model, mixer, animationsMap, orbitControls, camera,  'Idle')
+  }
+
+  )
+  // const Bot_Model = useLoader(GLTFLoader, Bot_GLB);
+  // console.log(Bot_Model)
+  // const Bot_geometry = Bot_Model.nodes.building.geometry;
+  // const Bot_Material = new THREE.MeshPhongMaterial({
+  //   color: 0x909090,
+  //   dithering: true,
+  // });
+  // let bot_mesh = new THREE.Mesh(Bot_geometry, Bot_Material);
+  // bot_mesh.castShadow = true; //default is false
+  // bot_mesh.receiveShadow = true; //default
+  // bot_mesh.position.set(0, 0, 0);
+  // Useful code, note needed anymore but ill leave it here for future
+
+  // Model_3D.nodes.building.traverse(function(node) {
+  //   if(node.isMesh) {
+  //     // console.log(node)
+  // 		node.castShadow = node.receiveShadow = true;
+  // 	}
+  // });
+
+  scene.add(model_mesh);
+
 
   useEffect(() => {
-    window.addEventListener("keydown", handleKeyPress);
     window.addEventListener("resize", onWindowResize);
     if (ref.current) {
       ref.current.appendChild(renderer.domElement);
