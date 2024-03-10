@@ -1,13 +1,22 @@
-.containerOpt {
+.container {
     position: fixed;
     z-index: 10;
     top: 50%;
     left: 50%;
     transform: translate(-50%,-50%);
+    width: 50vw;
+    height: 40vh;
     display: flex;
     flex-direction: column;
     align-items: center;
+    background: rgba($color: #000000, $alpha: 0.6);
+    border-radius: 20px;
   
+    p,h3{
+      color: white;
+      font-size: large;
+      margin: 20px;
+    }
     .buttons-container {
       display: flex;
       justify-content: space-between;
@@ -20,6 +29,7 @@
         border: none;
         border-radius: 5px;
         cursor: pointer;
+        margin: 20px;
       }
   
       .active-element {
@@ -37,5 +47,5 @@
       font-size: 16px;
       width: 200px;
     }
-  }
+}
   

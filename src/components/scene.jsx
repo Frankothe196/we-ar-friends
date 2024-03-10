@@ -45,9 +45,9 @@ function Scene() {
   let model_mesh = new THREE.Mesh(geometry, material);
   model_mesh.castShadow = true; //default is false
   model_mesh.receiveShadow = true; //default
-  model_mesh.scale.set(0.1, 0.1, 0.1); // its alittle too large lets scale it down
+  model_mesh.scale.set(0.5, 0.5, 0.5); // its alittle too large lets scale it down
   model_mesh.rotation.y = 0.9;
-  model_mesh.position.set(0, 0, -5);
+  model_mesh.position.set(0, 7.9, -5);
   // Useful code, note needed anymore but ill leave it here for future
 
   // Model_3D.nodes.building.traverse(function(node) {
