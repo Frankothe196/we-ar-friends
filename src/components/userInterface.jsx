@@ -1,14 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import styles from "../styles/interface.module.scss";
 
-const UserInterface = () => {
-  const [step, setStep] = useState("")
-  const [activeMap,setMap] = useState()
-  const [gameMode,setGameMode] = useState()
+const UserInterface = ({step,gameMode,activeMap,setGameMode,setMap,setStep}) => {
 
   useEffect(()=>{
-    setMap("Kenya International Convention Center")
-    setStep("login")
   }
   ,[])
 

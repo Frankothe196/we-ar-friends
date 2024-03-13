@@ -12,7 +12,7 @@ import GLB_Model from "../assets/models/kicc.glb";
 import Bot_GLB from "../assets/models/Soldier.glb";
 import UserInterface from "../components/userInterface";
 
-import { CharacterControls } from "./botControls";
+import { CharacterControls } from "../utils/botControls";
 import { KeyDisplay } from "./utils";
 
 function Scene() {
@@ -50,12 +50,6 @@ function Scene() {
   model_mesh.position.set(0, 7.9, -5);
   // Useful code, note needed anymore but ill leave it here for future
 
-  // Model_3D.nodes.building.traverse(function(node) {
-  //   if(node.isMesh) {
-  //     // console.log(node)
-  // 		node.castShadow = node.receiveShadow = true;
-  // 	}
-  // });
 
   scene.add(model_mesh);
 
@@ -87,12 +81,6 @@ function Scene() {
   );
   camera.position.set(8, 5, 8);
 
-  // // Init Controls
-  // const controls = new OrbitControls(camera, renderer.domElement);
-  // controls.target.set(0, 0, 0);
-  // controls.update();
-  // controls.enablePan = false;
-  // controls.enableDamping = true;
   // CONTROLS
   const orbitControls = new OrbitControls(camera, renderer.domElement);
   orbitControls.enableDamping = true
@@ -123,11 +111,6 @@ function Scene() {
 
   // Animate
   function animate() {
-    // We need to adjust the animate function from what three.js usually recommends does'nt work with web xr
-    // requestAnimationFrame(animate) // This should'nt work
-    // renderer.setAnimationLoop(function () {
-    //   renderer.render(scene, camera);
-    // });
     let mixerUpdateDelta = clock.getDelta();
     if (characterControls) {
         characterControls.update(mixerUpdateDelta, keysPressed);
@@ -164,32 +147,8 @@ function Scene() {
     gltfAnimations.filter(a => a.name != 'TPose').forEach((a) => {
         animationsMap.set(a.name, mixer.clipAction(a))
     })
-
     characterControls = new CharacterControls(model, mixer, animationsMap, orbitControls, camera,  'Idle')
-  }
-
-  )
-  // const Bot_Model = useLoader(GLTFLoader, Bot_GLB);
-  // console.log(Bot_Model)
-  // const Bot_geometry = Bot_Model.nodes.building.geometry;
-  // const Bot_Material = new THREE.MeshPhongMaterial({
-  //   color: 0x909090,
-  //   dithering: true,
-  // });
-  // let bot_mesh = new THREE.Mesh(Bot_geometry, Bot_Material);
-  // bot_mesh.castShadow = true; //default is false
-  // bot_mesh.receiveShadow = true; //default
-  // bot_mesh.position.set(0, 0, 0);
-  // Useful code, note needed anymore but ill leave it here for future
-
-  // Model_3D.nodes.building.traverse(function(node) {
-  //   if(node.isMesh) {
-  //     // console.log(node)
-  // 		node.castShadow = node.receiveShadow = true;
-  // 	}
-  // });
-
-  scene.add(model_mesh);
+  }) 
 
 
   useEffect(() => {
