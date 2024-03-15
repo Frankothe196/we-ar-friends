@@ -1,69 +1,74 @@
-/* eslint-disable */
-import { OrbitControls, Torus, useGLTF } from "@react-three/drei";
-import { Canvas, useFrame } from "@react-three/fiber";
-import { Physics, RigidBody, CuboidCollider } from "@react-three/rapier";
-import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import React from "react";
+import { useGLTF } from "@react-three/drei";
+import { useFrame } from "@react-three/fiber";
+// import { Physics, RigidBody, CuboidCollider } from "@react-three/rapier";
+import { useCallback, useEffect, useRef } from "react";
 
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
-import { useLoader } from '@react-three/fiber';
+import bot from "../assets/models/Xbot.glb";
 
-import bot from '../assets/models/Xbot.glb'
+import * as THREE from "three";
+import { isCompositeComponent } from "react-dom/test-utils";
 
-import { useAnimations } from "@react-three/drei"
+const Character = ({ camera }) => {
+  // const model = useLoader(GLTFLoader, bot);
 
-import * as THREE from 'three'
+  const model = useGLTF(bot, true);
 
-import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry'
+  useEffect(()=>{
+    model.scene.traverse((child) => {
+      if (child.isMesh) {
+        child.castShadow = true; // Enable shadow casting for each mesh in the model
+        child.receiveShadow = true; // Enable shadow receive for each mesh in the model
+      }
+    })
 
-const Character = ({setPos,Pos,index,setIndex}) =>{
-    // const model = useLoader(GLTFLoader, bot);
+  },[]
+  )
 
-    const model = useGLTF(bot, true)
+  // Extract animation actions
+  // const { ref, actions, names } = useAnimations(model.animations)
+  const group = useRef(); // Reference to the model's group for animations
+  // const { actions } = useAnimations(model.animations, group); // Access animations
 
-    // Extract animation actions
-    // const { ref, actions, names } = useAnimations(model.animations)
-    const group = useRef(); // Reference to the model's group for animations
-    // const { actions } = useAnimations(model.animations, group); // Access animations
-
-    // Here's the animation part
-    let mixer = new THREE.AnimationMixer(model.scene);
-    console.log(model.animations)
-    const animations = {};
-    animations["idle"] = {
+  // Here's the animation part
+  let mixer = new THREE.AnimationMixer(model.scene);
+  // console.log(model.animations);
+  const animations = {};
+  animations["idle"] = {
     clip: mixer.clipAction(model.animations[2]),
-    };
+  };
 
-    animations["walk"] = {
+  animations["walk"] = {
     clip: mixer.clipAction(model.animations[6]),
-    };
+  };
 
-    animations["run"] = {
+  animations["run"] = {
     clip: mixer.clipAction(model.animations[3]),
-    };
+  };
 
-    animations["dance"] = {
+  animations["dance"] = {
     clip: mixer.clipAction(model.animations[0]),
-    };
+  };
 
-    // set current Action
-    let currAction = animations["idle"].clip;
-    let prevAction;
-    const activeAnimation = {
-              forward: false,
-              backward: false,
-              left: false,
-              right: false,
-              run: false,
-              dance: false,
-            };
-    // Movements 
-    const currentPosition = new THREE.Vector3();
-    const currentLookAt = new THREE.Vector3();
-    const decceleration = new THREE.Vector3(-0.0005, -0.0001, -5.0);
-    const acceleration = new THREE.Vector3(1, 0.125, 100.0);
-    const velocity = new THREE.Vector3(0, 0, 0);
+  // set current Action
+  let currAction = animations["idle"].clip;
+  let prevAction;
+  const activeAnimation = {
+    forward: false,
+    backward: false,
+    left: false,
+    right: false,
+    run: false,
+    dance: false,
+  };
 
-      // movement
+  // Movements
+  const currentPosition = new THREE.Vector3();
+  const currentLookAt = new THREE.Vector3();
+  const decceleration = new THREE.Vector3(-0.0005, -0.0001, -5.0);
+  const acceleration = new THREE.Vector3(1, 0.125, 20.0);
+  const velocity = new THREE.Vector3(0, 0, 0);
+
   const characterState = (delta) => {
     const newVelocity = velocity;
     const frameDecceleration = new THREE.Vector3(
@@ -129,167 +134,173 @@ const Character = ({setPos,Pos,index,setIndex}) =>{
     controlObject.position.add(sideways);
 
     group.current.position.copy(controlObject.position);
-    // updateCameraTarget(delta);
+    updateCameraTarget(delta);
   };
 
-    // Movements end
+  // Movements end
 
+  // Camera
 
-    useFrame((state, delta) => {
-      prevAction = currAction;
-  
-      if (activeAnimation.forward) {
-        if (activeAnimation.run) {
-          currAction = animations["run"].clip;
-        } else {
-          currAction = animations["walk"].clip;
-        }
-      } else if (activeAnimation.left) {
-        if (activeAnimation.run) {
-          currAction = animations["run"].clip;
-        } else {
-          currAction = animations["walk"].clip;
-        }
-      } else if (activeAnimation.right) {
-        if (activeAnimation.run) {
-          currAction = animations["run"].clip;
-        } else {
-          currAction = animations["walk"].clip;
-        }
-      } else if (activeAnimation.backward) {
-        if (activeAnimation.run) {
-          currAction = animations["run"].clip;
-        } else {
-          currAction = animations["walk"].clip;
-        }
-      } else if (activeAnimation.dance) {
-        currAction = animations["dance"].clip;
+  const calculateIdealOffset = () => {
+    const idealOffset = new THREE.Vector3(0, 2, -2);
+    idealOffset.applyQuaternion(group.current.quaternion);
+    idealOffset.add(group.current.position);
+    return idealOffset;
+  };
+
+  const calculateIdealLookat = () => {
+    const idealLookat = new THREE.Vector3(0, 2, 50);
+    idealLookat.applyQuaternion(group.current.quaternion);
+    idealLookat.add(group.current.position);
+    return idealLookat;
+  };
+
+  function updateCameraTarget(delta) {
+    const idealOffset = calculateIdealOffset();
+    const idealLookat = calculateIdealLookat();
+
+    const t = 1.0 - Math.pow(0.01, delta);
+
+    currentPosition.lerp(idealOffset, t);
+    currentLookAt.lerp(idealLookat, t);
+
+    camera.position.copy(currentPosition);
+  }
+
+  useFrame((state, delta) => {
+    prevAction = currAction;
+
+    if (activeAnimation.forward) {
+      if (activeAnimation.run) {
+        currAction = animations["run"].clip;
       } else {
-        currAction = animations["idle"].clip;
-      }  
-
-        if (prevAction !== currAction) {
-        prevAction.fadeOut(0.2);
-  
-        if (prevAction === animations["walk"].clip) {
-          const ratio =
-            currAction.getClip().duration / prevAction.getClip().duration;
-          currAction.time = prevAction.time * ratio;
-        }
-  
-        currAction.reset().play();
-      } else {
-        currAction.play();
+        currAction = animations["walk"].clip;
       }
-  
-    //   characterState(delta);
-    //   const idealLookat = calculateIdealLookat();
-  
-    //   state.camera.lookAt(idealLookat);
-    //   state.camera.updateProjectionMatrix();
+    } else if (activeAnimation.left) {
+      if (activeAnimation.run) {
+        currAction = animations["run"].clip;
+      } else {
+        currAction = animations["walk"].clip;
+      }
+    } else if (activeAnimation.right) {
+      if (activeAnimation.run) {
+        currAction = animations["run"].clip;
+      } else {
+        currAction = animations["walk"].clip;
+      }
+    } else if (activeAnimation.backward) {
+      if (activeAnimation.run) {
+        currAction = animations["run"].clip;
+      } else {
+        currAction = animations["walk"].clip;
+      }
+    } else if (activeAnimation.dance) {
+      currAction = animations["dance"].clip;
+    } else {
+      currAction = animations["idle"].clip;
+    }
 
-      characterState(delta);
-      mixer?.update(delta);
+    if (prevAction !== currAction) {
+      prevAction.fadeOut(0.2);
 
-        });
+      if (prevAction === animations["walk"].clip) {
+        const ratio =
+          currAction.getClip().duration / prevAction.getClip().duration;
+        currAction.time = prevAction.time * ratio;
+      }
 
+      currAction.reset().play();
+    } else {
+      currAction.play();
+    }
 
-    useEffect(() => {
+    characterState(delta);
+    const idealLookat = calculateIdealLookat();
 
-        document.addEventListener("keydown", handleKeyPress);
-    
-        document.addEventListener("keyup", handleKeyUp);
-        currAction.play();
-        return () => {
-        document.removeEventListener("keydown", handleKeyPress);
-    
-        document.removeEventListener("keyup", handleKeyUp);
-        };
-    });
+    state.camera.lookAt(idealLookat);
+    state.camera.updateProjectionMatrix();
 
-    // const handleKeyDown = (event) => {
-    //     console.log(event.key)
-    //   switch (event.key) {
-    //     case 'ArrowUp':
-    //       boxPosition[0] += 0.1;
-    //       break;
-    //     case 'ArrowDown':
-    //       boxPosition[0]  -= 0.1;
-    //       break;
-    //     case 'ArrowLeft':
-    //       boxPosition[1] -= 0.1;
-    //       break;
-    //     case 'ArrowRight':
-    //       boxPosition[1] += 0.1;
-    //       break;
-    //     default:
-    //       break;
-    //   }
-    // };
-    
-    // // Control Input
-    const handleKeyPress = useCallback((event) => {
-      console.log(group.current)
-      switch (event.keyCode) {
-        case 87: //w
-          activeAnimation.forward = true;
+    characterState(delta);
+    mixer?.update(delta);
+  });
+
+  useEffect(() => {
+    document.addEventListener("keydown", handleKeyPress);
+
+    document.addEventListener("keyup", handleKeyUp);
+    currAction.play();
+    return () => {
+      document.removeEventListener("keydown", handleKeyPress);
+
+      document.removeEventListener("keyup", handleKeyUp);
+    };
+  });
+
+  // Control Input
+  const handleKeyPress = useCallback((event) => {
+    // console.log(group.current);
+    switch (event.keyCode) {
+      case 87: //w
+        activeAnimation.forward = true;
         //   setPos(curr=>curr[0] += 0.1)
-          break;
-  
-        case 65: //a
-          activeAnimation.left = true;
-  
-          break;
-  
-        case 83: //s
-          activeAnimation.backward = true;
-  
-          break;
-  
-        case 68: // d
-          activeAnimation.right = true;
-  
-          break;
-  
-        case 69: //e dance
-          activeAnimation.dance = true;
-  
-          break;
-        case 16: // shift
-          activeAnimation.run = true;
-          break;
-      }
-    }, []);
-  
-    const handleKeyUp = useCallback((event) => {
-      switch (event.keyCode) {
-        case 87: //w
-          activeAnimation.forward = false;
-          break;
-  
-        case 65: //a
-          activeAnimation.left = false;
-          break;
-  
-        case 83: //s
-          activeAnimation.backward = false;
-          break;
-  
-        case 68: // d
-          activeAnimation.right = false;
-          break;
-  
-        case 69: //e dance
-          activeAnimation.dance = false;
-          break;
-  
-        case 16: // shift
-          activeAnimation.run = false;
-          break;
-      }
-    }, []);
+        break;
 
-    return <primitive position={Pos} ref={group} material={model.materials} object={model.scene} />;
-}
+      case 65: //a
+        activeAnimation.left = true;
 
-export default Character
+        break;
+
+      case 83: //s
+        activeAnimation.backward = true;
+
+        break;
+
+      case 68: // d
+        activeAnimation.right = true;
+
+        break;
+
+      case 69: //e dance
+        activeAnimation.dance = true;
+
+        break;
+      case 16: // shift
+        activeAnimation.run = true;
+        break;
+    }
+  }, []);
+
+  const handleKeyUp = useCallback((event) => {
+    switch (event.keyCode) {
+      case 87: //w
+        activeAnimation.forward = false;
+        break;
+
+      case 65: //a
+        activeAnimation.left = false;
+        break;
+
+      case 83: //s
+        activeAnimation.backward = false;
+        break;
+
+      case 68: // d
+        activeAnimation.right = false;
+        break;
+
+      case 69: //e dance
+        activeAnimation.dance = false;
+        break;
+
+      case 16: // shift
+        activeAnimation.run = false;
+        break;
+    }
+  }, []);
+
+  return (
+    <primitive ref={group} material={model.materials} object={model.scene} castShadow receiveShadow/>
+  );
+};
+
+export default Character;

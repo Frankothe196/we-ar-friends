@@ -1,11 +1,15 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import styles from "../styles/interface.module.scss";
 
-const UserInterface = ({step,gameMode,activeMap,setGameMode,setMap,setStep}) => {
+const UserInterface = () => {
+  const [step, setStep] = useState("")
+  const [activeMap,setMap] = useState()
+  const [gameMode,setGameMode] = useState()
 
   useEffect(()=>{
-  }
-  ,[])
+    setMap("Kenya International Convention Center")
+    setStep("login")
+  },[])
 
   const changeStep = (e) =>{
     setStep(e)
@@ -22,7 +26,6 @@ const UserInterface = ({step,gameMode,activeMap,setGameMode,setMap,setStep}) => 
             <button onClick={()=>{changeStep("opts")}} className={styles.button}>Get Started</button>
           </div>
         </div>
-      
         :""}
       </>
     )
