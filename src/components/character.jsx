@@ -7,7 +7,6 @@ import { useCallback, useEffect, useRef } from "react";
 import bot from "../assets/models/Xbot.glb";
 
 import * as THREE from "three";
-import { isCompositeComponent } from "react-dom/test-utils";
 
 const Character = ({ camera }) => {
   // const model = useLoader(GLTFLoader, bot);
@@ -127,11 +126,16 @@ const Character = ({ camera }) => {
     sideways.applyQuaternion(controlObject.quaternion);
     sideways.normalize();
 
+    // const gravity = new THREE.Vector3(0, -1, 0);
+    // gravity.applyQuaternion(controlObject.quaternion);
+    // gravity.normalize();
+
     sideways.multiplyScalar(newVelocity.x * delta);
     forward.multiplyScalar(newVelocity.z * delta);
 
     controlObject.position.add(forward);
     controlObject.position.add(sideways);
+    // controlObject.position.add(gravity);
 
     group.current.position.copy(controlObject.position);
     updateCameraTarget(delta);
